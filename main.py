@@ -1,7 +1,19 @@
 from blake3 import blake3
 from hashlib import sha1, sha224, sha256, sha384, sha512, sha3_224, sha3_256, sha3_384, sha3_512, blake2s, blake2b, md5
 from zlib import crc32
+import os
+import sys
+from tkinter import *
 
+
+def resource_path(relative_path):
+	""" Get absolute path to resource, works for dev and for PyInstaller """
+	try:
+		# PyInstaller creates a temp folder and stores path in _MEIPASS
+		base_path = sys._MEIPASS
+	except AttributeError:
+		base_path = os.path.abspath(".")
+	return os.path.join(base_path, relative_path)
 
 def gen_blake2b(file, hex_hash=True):
 	hasher = blake2b()
@@ -143,8 +155,14 @@ def gen_sha3_512(file, hex_hash=True):
 	else:
 		return hasher.digest()
 
+def main():
+	root = Tk()
+	root.resizable(False, False)
+	root.title("F-Hasher")
+	root.geometry(f"500x500+{root.winfo_screenwidth() // 2 - 250}+{root.winfo_screenheight() // 2 - 250}")
+	root.iconbitmap(resource_path())
 
-if __name__ == "__main__":
+
 	print(gen_blake2b(r"main.py"))
 	print(gen_blake2s(r"main.py"))
 	print(gen_blake3(r"main.py"))
@@ -159,3 +177,7 @@ if __name__ == "__main__":
 	print(gen_sha3_256(r"main.py"))
 	print(gen_sha3_384(r"main.py"))
 	print(gen_sha3_512(r"main.py"))
+
+
+if __name__ == "__main__":
+	main()
