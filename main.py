@@ -160,8 +160,19 @@ def main():
 	root.resizable(False, False)
 	root.title("F-Hasher")
 	root.geometry(f"500x500+{root.winfo_screenwidth() // 2 - 250}+{root.winfo_screenheight() // 2 - 250}")
-	root.iconbitmap(resource_path())
+	root.iconbitmap(resource_path("data\\hash-icon.ico"))
+	root.config(background="#58c9ff")
 
+	title = Label(root,
+	              text="F-Hasher", font=("Gabriola", 50, "italic", "bold"),
+	              foreground="white", activeforeground="white",
+	              background="#58c9ff", activebackground="#58c9ff",
+	              highlightthickness=0, borderwidth=0)
+	title.place(x=0, y=0, width=500, height=100)
+
+	# hash method, file entry
+
+	root.mainloop()
 
 	print(gen_blake2b(r"main.py"))
 	print(gen_blake2s(r"main.py"))
