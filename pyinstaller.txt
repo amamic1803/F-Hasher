@@ -1,0 +1,1 @@
+pyinstaller "main.py" --upx-dir "__UPX_PATH__" --noconsole --icon "data\\hash-icon.ico" --onefile --add-data "data\\hash-icon.ico;data" --clean --key "__KEY__" --name "F-Hasher-v1.0.0"
