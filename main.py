@@ -8,7 +8,8 @@ from tkinter import *
 from tkinter.messagebox import showinfo, showerror
 from tkinter.filedialog import askopenfilename
 import pyperclip
-import threading
+from threading import Thread
+import psutil
 
 
 def resource_path(relative_path):
@@ -161,49 +162,58 @@ def gen_sha3_512(file, hex_hash=True):
 		return hasher.digest()
 
 def hash_copy(event):
-	global pi_generated, pi_value, root
-	if pi_generated:
-		pyperclip.copy(pi_value)
-		showinfo(title="Copied!", message="Pi copied to clipboard!", parent=root)
+	global disabled, output_hash, hashed
+	if not disabled and output_hash["text"] != "":
+		pyperclip.copy(hashed)
+		showinfo(title="Copied!", message="Hash value copied to clipboard!", parent=root)
 
 def hash_select_click(event, widget, toplevel_win):
-	global hash_selected, hash_selector
+	global hash_selected, hash_selector, hashed, output_hash
 	hash_selected = widget["text"]
 	hash_selector.config(text=hash_selected)
 	toplevel_win.destroy()
+	hashed = ""
+	output_hash.config(text="")
 
 def hash_select(event):
-	global HASH_ALGOS, root
+	global HASH_ALGOS, root, disabled
+	if not disabled:
+		hash_btns = []
 
-	hash_btns = []
+		select_window = Toplevel(root, background="light blue")
+		select_window.title("Select hash!")
+		select_window.geometry(f"250x560+{root.winfo_screenwidth() // 2 - 125}+{root.winfo_screenheight() // 2 - 280}")
+		select_window.resizable(False, False)
+		select_window.iconbitmap(resource_path("data\\hash-icon.ico"))
+		select_window.grab_set()
+		select_window.focus()
 
-	select_window = Toplevel(root, background="light blue")
-	select_window.title("Select hash!")
-	select_window.geometry(f"250x560+{root.winfo_screenwidth() // 2 - 125}+{root.winfo_screenheight() // 2 - 280}")
-	select_window.resizable(False, False)
-	select_window.iconbitmap(resource_path("data\\hash-icon.ico"))
-	select_window.grab_set()
-	select_window.focus()
+		curr_y = 0
+		for i in HASH_ALGOS:
+			hash_btns.append(Label(select_window,
+			                       text=i, font=("Helvetica", 15, "bold"),
+			                       borderwidth=0, highlightthickness=0,
+			                       background="light blue", activebackground="light blue",
+			                       foreground="#ffffff", activeforeground="#ffffff"))
+			hash_btns[-1].place(x=0, y=curr_y, width=250, height=40)
+			hash_btns[-1].bind("<Enter>", lambda event=event, widget=hash_btns[-1]: widget.config(background="#B5E2F0", activebackground="#B5E2F0"))
+			hash_btns[-1].bind("<Leave>", lambda event=event, widget=hash_btns[-1]: widget.config(background="light blue", activebackground="light blue"))
+			hash_btns[-1].bind("<ButtonRelease-1>", lambda event=event, widget=hash_btns[-1]: hash_select_click(event, widget, select_window))
+			curr_y += 40
 
-	curr_y = 0
-	for i in HASH_ALGOS:
-		hash_btns.append(Label(select_window,
-		                       text=i, font=("Helvetica", 15, "bold"),
-		                       borderwidth=0, highlightthickness=0,
-		                       background="light blue", activebackground="light blue",
-		                       foreground="#ffffff", activeforeground="#ffffff"))
-		hash_btns[-1].place(x=0, y=curr_y, width=250, height=40)
-		hash_btns[-1].bind("<Enter>", lambda event=event, widget=hash_btns[-1]: widget.config(background="#B5E2F0", activebackground="#B5E2F0"))
-		hash_btns[-1].bind("<Leave>", lambda event=event, widget=hash_btns[-1]: widget.config(background="light blue", activebackground="light blue"))
-		hash_btns[-1].bind("<ButtonRelease-1>", lambda event=event, widget=hash_btns[-1]: hash_select_click(event, widget, select_window))
-		curr_y += 40
-
-	select_window.mainloop()
-	select_window.grab_release()
+		select_window.mainloop()
 
 def hover_algo(event, widget, typ):
 	global disabled
 	if not disabled:
+		if typ:
+			widget.config(background="#8AD9FF", activebackground="#8AD9FF")
+		else:
+			widget.config(background="#58c9ff", activebackground="#58c9ff")
+
+def hover_hash(event, widget, typ):
+	global disabled
+	if not disabled and widget["text"] != "":
 		if typ:
 			widget.config(background="#8AD9FF", activebackground="#8AD9FF")
 		else:
@@ -231,20 +241,76 @@ def browse_click(event):
 			file_ent.insert(0, selection.replace("/", "\\"))
 			file_ent.xview_moveto(1)
 
-def hash_click(event):
+def hash_file(file, hash_method):
+	global disabled, file_ent, start_hashing, output_hash, browse_btn, hashed
 
+	match hash_method:
+		case "BLAKE2B":
+			hashed = gen_blake2b(file)
+		case "BLAKE2S":
+			hashed = gen_blake2s(file)
+		case "BLAKE3":
+			hashed = gen_blake3(file)
+		case "CRC32":
+			hashed = gen_crc32(file)
+		case "MD5":
+			hashed = gen_md5(file)
+		case "SHA1":
+			hashed = gen_sha1(file)
+		case "SHA224":
+			hashed = gen_sha224(file)
+		case "SHA256":
+			hashed = gen_sha256(file)
+		case "SHA384":
+			hashed = gen_sha384(file)
+		case "SHA512":
+			hashed = gen_sha512(file)
+		case "SHA3 224":
+			hashed = gen_sha3_224(file)
+		case "SHA3 256":
+			hashed = gen_sha3_256(file)
+		case "SHA3 384":
+			hashed = gen_sha3_384(file)
+		case "SHA3 512":
+			hashed = gen_sha3_512(file)
+
+	disabled = False
+	start_hashing.config(text="Hash", background="#406060", activebackground="#406060")
+	browse_btn.config(background="#406060", activebackground="#406060")
+	file_ent.config(state="normal")
+
+	if len(hashed) > 64:
+		output_hash.config(text=f"{hashed[:32]}...{hashed[-32:]}")
+	else:
+		output_hash.config(text=hashed)
+
+def hash_click(event):
+	global disabled, file_ent, root, start_hashing, hash_selected, browse_btn
+
+	content = file_ent.get()
+
+	if os.path.isfile(content) and access(content, R_OK):
+		hash_thread = Thread(target=hash_file, args=(content, hash_selected))
+		hash_thread.start()
+		disabled = True
+		start_hashing.config(highlightthickness=1, text="Hashing", background="#263939", activebackground="#263939")
+		browse_btn.config(background="#263939", activebackground="#263939")
+		file_ent.config(state="disabled")
+	else:
+		showerror(title="Invalid file!", message="The selected file can't be processed!", parent=root)
 
 def main():
-	global root, file_ent, disabled, HASH_ALGOS, hash_selected, hash_selector
+	global root, file_ent, disabled, HASH_ALGOS, hash_selected, hash_selector, start_hashing, output_hash, browse_btn, hashed
 
 	HASH_ALGOS = ["BLAKE2B", "BLAKE2S", "BLAKE3", "CRC32", "MD5", "SHA1", "SHA224", "SHA256", "SHA384", "SHA512", "SHA3 224", "SHA3 256", "SHA3 384", "SHA3 512"]
+	hashed = ""
 
 	disabled = False
 
 	root = Tk()
 	root.resizable(False, False)
 	root.title("F-Hasher")
-	root.geometry(f"750x500+{root.winfo_screenwidth() // 2 - 375}+{root.winfo_screenheight() // 2 - 250}")
+	root.geometry(f"750x250+{root.winfo_screenwidth() // 2 - 375}+{root.winfo_screenheight() // 2 - 125}")
 	root.iconbitmap(resource_path("data\\hash-icon.ico"))
 	root.config(background="#58c9ff")
 
@@ -304,24 +370,20 @@ def main():
 	start_hashing.place(x=650, y=160, width=75, height=30)
 	start_hashing.bind("<Enter>", lambda event: change_thickness(event, start_hashing, False))
 	start_hashing.bind("<Leave>", lambda event: change_thickness(event, start_hashing, True))
-	start_hashing.bind("<ButtonRelease-1>", browse_click)
+	start_hashing.bind("<ButtonRelease-1>", hash_click)
+
+	output_hash = Label(root,
+	                    text="", font=("Helvetica", 14, "bold"),
+	                    borderwidth=0,
+	                    background="#58c9ff", activebackground="#58c9ff",
+	                    foreground="#ffffff", activeforeground="#ffffff")
+	output_hash.place(x=0, y=190, width=750, height=60)
+	output_hash.bind("<Enter>", lambda event: hover_hash(event, output_hash, True))
+	output_hash.bind("<Leave>", lambda event: hover_hash(event, output_hash, False))
+	output_hash.bind("<ButtonRelease-1>", lambda event: hash_copy(event))
 
 	root.mainloop()
-
-	print(gen_blake2b(r"main.py"))
-	print(gen_blake2s(r"main.py"))
-	print(gen_blake3(r"main.py"))
-	print(gen_crc32(r"main.py"))
-	print(gen_md5(r"main.py"))
-	print(gen_sha1(r"main.py"))
-	print(gen_sha224(r"main.py"))
-	print(gen_sha256(r"main.py"))
-	print(gen_sha384(r"main.py"))
-	print(gen_sha512(r"main.py"))
-	print(gen_sha3_224(r"main.py"))
-	print(gen_sha3_256(r"main.py"))
-	print(gen_sha3_384(r"main.py"))
-	print(gen_sha3_512(r"main.py"))
+	psutil.Process(os.getpid()).kill()
 
 
 if __name__ == "__main__":
