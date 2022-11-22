@@ -201,7 +201,7 @@ def hash_select(event):
 			hash_btns[-1].bind("<ButtonRelease-1>", lambda event=event, widget=hash_btns[-1]: hash_select_click(event, widget, select_window))
 			curr_y += 40
 
-		select_window.mainloop()
+		select_window.wait_window()
 
 def hover_algo(event, widget, typ):
 	global disabled
