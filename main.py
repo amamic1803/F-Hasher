@@ -30,6 +30,8 @@ HASH_ALGORITHMS = [
 	"SHA3 512"
 ]
 
+CHUNK_SIZE = 2 ** 13
+
 
 def resource_path(relative_path):
 	""" Get absolute path to resource, works for dev and for PyInstaller """
