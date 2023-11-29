@@ -91,7 +91,7 @@ def calculate_hash(file, hash_method, hex_hash=True):
 			hasher = sha3_512()
 
 	with open(file, "rb") as file:
-		while chunk := file.read(8192):
+		while chunk := file.read(CHUNK_SIZE):
 			hasher.update(chunk)
 	if hex_hash:
 		return hasher.hexdigest()
