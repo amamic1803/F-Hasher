@@ -1,10 +1,4 @@
-altgraph==0.17.3
-blake3==0.3.1
-future==0.18.2
-pefile==2022.5.30
-psutil==5.9.4
-pyinstaller==5.6.2
-pyinstaller-hooks-contrib==2022.13
+blake3==0.3.3
+psutil==5.9.6
+pyinstaller==6.2.0
 pyperclip==1.8.2
-pywin32-ctypes==0.2.0
-tinyaes==1.0.4
