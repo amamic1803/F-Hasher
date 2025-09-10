@@ -1,5 +1,7 @@
 # F-Hasher
-Get the hash value of the selected file.
+Calculate the hash value of a file.
+
+This is just a GUI calling into various Python libraries to do the actual hashing.
 
 ![screenshot](https://user-images.githubusercontent.com/40371578/192598621-376d9a4f-a04b-4ef7-a711-46408a1bd08d.png)
 
